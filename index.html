@@ -1,0 +1,101 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <link href="ol/ol.css" rel="stylesheet" />
+    <style>
+        html, body, .map {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .ol-control-panel {
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+    <script src="ol/ol.js"></script>
+    <title>OpenLayers example</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="map" class="map"></div>
+    <script type="text/javascript">
+        //This is the object that allows drawing, you will set the type below
+        var draw = new ol.interaction.Draw({
+        });
+        var source = new ol.source.Vector();
+        var vector = new ol.layer.Vector({
+            source: source,
+            style: new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(255, 255, 255, 0.2)'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#ffcc33',
+                    width: 2
+                }),
+                image: new ol.style.Circle({
+                    radius: 7,
+                    fill: new ol.style.Fill({
+                        color: '#ffcc33'
+                    })
+                })
+            })
+        });
+
+        var map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                }),
+                vector
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([37.41, 8.82]),
+                zoom: 4
+            })
+        });
+        var modify = new ol.interaction.Modify({ source: source });
+        map.addInteraction(modify);
+        addControls();
+        function addControls() {
+
+            var drawPoint = document.createElement('button');
+            drawPoint.setAttribute('content', 'test content');
+            drawPoint.id = "drawPoint";
+            drawPoint.innerHTML = "<span class='glyphicon glyphicon-record' aria-hidden='true'></span>";
+            drawPoint.onclick = enableDrawPointInteraction;
+            
+            var element = document.createElement('div');
+            element.className = 'ol-control-panel ol-unselectable ol-control';
+            element.appendChild(drawPoint);
+
+            /*A custom control which has container holding input elements etc*/
+            var controlPanel = new ol.control.Control({
+                element: element
+            });
+            map.addControl(controlPanel);
+        }
+
+        function enableDrawPointInteraction()
+        {
+            draw = new ol.interaction.Draw({
+                source: source,
+                type: "Point"
+            });
+            map.addInteraction(draw);
+            snap = new ol.interaction.Snap({ source: source });
+            map.addInteraction(snap);
+            draw.on('drawend', function (evt) {
+                console.log(evt.feature.getGeometry().getCoordinates());
+            });
+        }
+    </script>
+</body>
+</html>

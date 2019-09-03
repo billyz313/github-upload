@@ -17,6 +17,10 @@
     </style>
     <script src="ol/ol.js"></script>
     <title>OpenLayers example</title>
+    <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <!-- Latest compiled and minified JavaScript -->
@@ -52,7 +56,12 @@
             target: 'map',
             layers: [
                 new ol.layer.Tile({
-                    source: new ol.source.OSM()
+                    source: new ol.source.XYZ({
+                        attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/' +
+                        'rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
+                        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/' +
+                        'World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+                    })
                 }),
                 vector
             ],
@@ -65,16 +74,10 @@
         map.addInteraction(modify);
         addControls();
         function addControls() {
-
-            var drawPoint = document.createElement('button');
-            drawPoint.setAttribute('content', 'test content');
-            drawPoint.id = "drawPoint";
-            drawPoint.innerHTML = "<span class='glyphicon glyphicon-record' aria-hidden='true'></span>";
-            drawPoint.onclick = enableDrawPointInteraction;
-            
             var element = document.createElement('div');
             element.className = 'ol-control-panel ol-unselectable ol-control';
-            element.appendChild(drawPoint);
+            element.appendChild(createControl("Point", "glyphicon glyphicon-record"));
+            element.appendChild(createControl("Polygon", "fas fa-draw-polygon"));
 
             /*A custom control which has container holding input elements etc*/
             var controlPanel = new ol.control.Control({
@@ -83,18 +86,41 @@
             map.addControl(controlPanel);
         }
 
-        function enableDrawPointInteraction()
+        function createControl(which, icon){
+            var drawElement = document.createElement('button');
+            drawElement.id = "draw" + which;
+            drawElement.innerHTML = "<span class='"+icon+"' aria-hidden='true'></span>";
+            drawElement.onclick = function () { enableDrawInteraction(which); }
+            return drawElement;
+        }
+
+        function enableDrawInteraction(which)
         {
+            try {
+                map.removeInteraction(draw);
+            }
+            catch (e) { }
+            source.clear();
             draw = new ol.interaction.Draw({
                 source: source,
-                type: "Point"
+                type: which
             });
             map.addInteraction(draw);
             snap = new ol.interaction.Snap({ source: source });
             map.addInteraction(snap);
             draw.on('drawend', function (evt) {
-                console.log(evt.feature.getGeometry().getCoordinates());
+                processFeature(evt.feature, which);
             });
+        }
+
+        function processFeature(feature, featureType) {
+            if (featureType == "Point") {
+                console.log("Process as point");
+            } else if (featureType == "Polygon") {
+                console.log("Process as Polygon");
+            }
+
+            console.log(feature.getGeometry().getCoordinates());
         }
     </script>
 </body>
